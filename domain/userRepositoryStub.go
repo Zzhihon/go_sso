@@ -10,8 +10,8 @@ func (s UserRepositoryStub) FindAll() ([]User, error) {
 
 func NewUserRepositoryStub() UserRepositoryStub {
 	users := []User{
-		{"20233802086", "hzh"},
-		{"20233808888", "qwq"},
+		//{"20233802086", "hzh"},
+		//{"20233808888", "qwq"},
 	}
 
 	return UserRepositoryStub{users}

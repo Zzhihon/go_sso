@@ -11,7 +11,9 @@ import (
 func Start() {
 	router := mux.NewRouter()
 
-	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryStub())}
+	//初始化一个服务，同时要给这个服务注入依赖(Repo)
+	//handler通过Service接口实现业务逻辑，同时依赖Repo来实现与数据库的操作
+	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb())}
 
 	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
 	//router.HandleFunc("/auth/login", ah.Login).Methods(http.MethodPost)
