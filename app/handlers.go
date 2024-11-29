@@ -3,7 +3,8 @@ package app
 import (
 	"encoding/json"
 	"encoding/xml"
-	"github.com/Zhihon/go_sso/service"
+	"github.com/Zzhihon/sso/service"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -19,5 +20,26 @@ func (ch *UserHandlers) getALLUsers(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(users)
+	}
+}
+
+func (ch *UserHandlers) getUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["user_id"]
+
+	user, err := ch.service.GetUser(id)
+
+	if err != nil {
+		writeResponse(w, err.Code, err.AsMessage())
+	} else {
+		writeResponse(w, http.StatusOK, user)
+	}
+}
+
+func writeResponse(w http.ResponseWriter, code int, data interface{}) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(code)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		panic(err)
 	}
 }

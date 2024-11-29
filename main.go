@@ -1,6 +1,6 @@
 package main
 
-import "github.com/Zhihon/go_sso/app"
+import "github.com/Zzhihon/sso/app"
 
 func main() {
 

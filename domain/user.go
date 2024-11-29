@@ -1,6 +1,9 @@
 package domain
 
-import "database/sql"
+import (
+	"database/sql"
+	"github.com/Zzhihon/sso/errs"
+)
 
 type User struct {
 	UserID      string         `db: "userID"`
@@ -13,4 +16,5 @@ type User struct {
 
 type UserRepository interface {
 	FindAll() ([]User, error)
+	ById(string) (*User, *errs.AppError)
 }

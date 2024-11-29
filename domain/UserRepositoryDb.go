@@ -2,6 +2,7 @@ package domain
 
 import (
 	"database/sql"
+	"github.com/Zzhihon/sso/errs"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"time"
@@ -35,6 +36,24 @@ func (d UserRepositoryDb) FindAll() ([]User, error) {
 	//此时的数据库只初始化了name和userID的字段，其他字段还没涉及到sql查询
 	//所以这里返回的结构体会包含null值
 	return users, nil
+}
+
+func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
+	Usersql := "select userID, name from users where userID = ?"
+	row := d.client.QueryRow(Usersql, id)
+	var u User
+	err := row.Scan(&u.UserID, &u.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			//没找到匹配项
+			return nil, errs.NewNotFoundError("user not found")
+		} else {
+			log.Print("Error when scanning user" + err.Error())
+			//mysql服务未开启||数据库名称出错
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+	}
+	return &u, nil
 }
 
 func NewUserRepositoryDb() UserRepositoryDb {
