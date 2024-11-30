@@ -35,7 +35,7 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 }
 
 func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
-	Usersql := "select userID, name from users where userID = ?"
+	Usersql := "select userID, name, email, phoneNumber, grade, majorClass, status from users where userID = ?"
 
 	var u User
 	err := d.client.Get(&u, Usersql, id)
@@ -51,12 +51,27 @@ func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
 	return &u, nil
 }
 
-func (d UserRepositoryDb) Update(u User) (*User, *errs.AppError) {
-	// 更新 email 的 SQL 查询
-	query := "UPDATE users SET name = ? WHERE userID = ?;"
+func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
+	var query string
+	var s string
+	//用imple识别用户要修改的字段
+	if imple == "Name" {
+		query = "UPDATE users SET name = ? WHERE userID = ?;"
+		s = u.Name
+	}
+	if imple == "Email" {
+		query = "UPDATE users SET email = ? WHERE userID = ?;"
+		s = u.Email.String
+	}
+	if imple == "PhoneNumber" {
+		query = "UPDATE users SET phoneNumber = ? WHERE userID = ?;"
+		s = u.PhoneNumber.String
+	}
 
 	// 使用 Exec 执行更新操作
-	result, err := d.client.Exec(query, u.Name, u.UserID)
+	//UserID用来锁定row
+	//结构体的字段会和数据库的字段进行映射 确保后端和数据都会同步更新
+	result, err := d.client.Exec(query, s, u.UserID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,7 +81,7 @@ func (d UserRepositoryDb) Update(u User) (*User, *errs.AppError) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	//异常处理
 	if affectedRows == 0 {
 		return nil, errs.NewUnexpectedError("No rows were updated")
 	}

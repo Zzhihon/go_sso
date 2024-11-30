@@ -18,6 +18,12 @@ type User struct {
 	Status      sql.NullString `db:"status"`
 }
 
+type UserRepository interface {
+	FindAll(status string) ([]User, *errs.AppError)
+	ById(string) (*User, *errs.AppError)
+	Update(User, string) (*User, *errs.AppError)
+}
+
 func (u User) StatusAsText() string {
 	statusAsText := "active"
 	if u.Status.String == "0" {
@@ -36,10 +42,4 @@ func (u User) ToDto() dto.UserResponse {
 		PhoneNumber: u.PhoneNumber.String,
 		Status:      u.StatusAsText(),
 	}
-}
-
-type UserRepository interface {
-	FindAll(status string) ([]User, *errs.AppError)
-	ById(string) (*User, *errs.AppError)
-	Update(User) (*User, *errs.AppError)
 }

@@ -9,7 +9,7 @@ import (
 type UserService interface {
 	GetAllUsers(status string) ([]dto.UserResponse, *errs.AppError)
 	GetUser(id string) (*dto.UserResponse, *errs.AppError)
-	UpdateName(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError)
+	Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError)
 }
 
 type DefaultUserService struct {
@@ -46,19 +46,26 @@ func (s DefaultUserService) GetUser(id string) (*dto.UserResponse, *errs.AppErro
 	return &response, nil
 }
 
-func (s DefaultUserService) UpdateName(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError) {
+func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError) {
 	id := r.UserID
-	name := r.Name
+	//寻找有无匹配id的用户
 	user, err := s.repo.ById(id)
 	if err != nil {
 		return nil, err
 	}
-	u := domain.User{
-		UserID: user.UserID,
-		Name:   name,
+
+	//Update
+	if r.Impl == "Name" {
+		user.Name = r.Name
+	}
+	if r.Impl == "Email" {
+		user.Email.String = r.Email
+	}
+	if r.Impl == "PhoneNumber" {
+		user.PhoneNumber.String = r.PhoneNumber
 	}
 
-	newUser, err := s.repo.Update(u)
+	newUser, err := s.repo.Update(*user, r.Impl)
 	if err != nil {
 		return nil, err
 	}

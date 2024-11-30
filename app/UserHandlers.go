@@ -40,13 +40,18 @@ func (ch *UserHandlers) getUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ch *UserHandlers) updateName(w http.ResponseWriter, r *http.Request) {
+func (ch *UserHandlers) update(w http.ResponseWriter, r *http.Request) {
 	var request dto.NewUpdateRequest
+	//处理路径中要执行的操作
+	vars := mux.Vars(r)
+	impl := vars["impl"]
+
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		writeResponse(w, http.StatusBadRequest, err.Error())
 	} else {
-		user, err := ch.service.UpdateName(request)
+		request.Impl = impl
+		user, err := ch.service.Update(request)
 		if err != nil {
 			writeResponse(w, err.Code, err.AsMessage())
 		} else {
