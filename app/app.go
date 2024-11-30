@@ -15,6 +15,7 @@ func Start() {
 	//handler通过Service接口实现业务逻辑，同时依赖Repo来实现与数据库的操作
 	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb())}
 
+	router.HandleFunc("/UpdateName", ch.updateName).Methods((http.MethodPost))
 	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods("GET")
 	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
 	//router.HandleFunc("/auth/login", ah.Login).Methods(http.MethodPost)

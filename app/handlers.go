@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"encoding/xml"
+	"github.com/Zzhihon/sso/dto"
 	"github.com/Zzhihon/sso/service"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -13,7 +14,10 @@ type UserHandlers struct {
 }
 
 func (ch *UserHandlers) getALLUsers(w http.ResponseWriter, r *http.Request) {
-	users, _ := ch.service.GetAllUsers()
+
+	status := r.URL.Query().Get("status")
+	users, _ := ch.service.GetAllUsers(status)
+
 	if r.Header.Get("Content-Type") == "application/xml" {
 		w.Header().Add("Content-Type", "application/xml")
 		xml.NewEncoder(w).Encode(users)
@@ -33,6 +37,21 @@ func (ch *UserHandlers) getUser(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, err.Code, err.AsMessage())
 	} else {
 		writeResponse(w, http.StatusOK, user)
+	}
+}
+
+func (ch *UserHandlers) updateName(w http.ResponseWriter, r *http.Request) {
+	var request dto.NewUpdateRequest
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		writeResponse(w, http.StatusBadRequest, err.Error())
+	} else {
+		user, err := ch.service.UpdateName(request)
+		if err != nil {
+			writeResponse(w, err.Code, err.AsMessage())
+		} else {
+			writeResponse(w, http.StatusOK, user)
+		}
 	}
 }
 

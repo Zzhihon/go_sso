@@ -3,35 +3,31 @@ package domain
 import (
 	"database/sql"
 	"github.com/Zzhihon/sso/errs"
+	"github.com/Zzhihon/sso/logger"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
 
 type UserRepositoryDb struct {
-	client *sql.DB
+	client *sqlx.DB
 }
 
-func (d UserRepositoryDb) FindAll() ([]User, error) {
-	//sql操作
-	findAllSql := "select userID, name from users"
-	//返回查询到的rows对象
-	rows, err := d.client.Query(findAllSql)
-	if err != nil {
-		log.Print("Error when query for user table " + err.Error())
-		return nil, err
-	}
+func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
+	var err error
 	users := make([]User, 0)
-	//查询数据
-	for rows.Next() {
-		var u User
-		//将rows读取到的数据写入User结构体u
-		err := rows.Scan(&u.UserID, &u.Name)
-		if err != nil {
-			log.Print("Error when scanning user table " + err.Error())
-			return nil, err
-		}
-		users = append(users, u)
+
+	if status == "" {
+		findAllSql := "select userID, name from users"
+		err = d.client.Select(&users, findAllSql)
+	} else {
+		findAllSql := "select userID, name from users"
+		err = d.client.Select(&users, findAllSql, status)
+	}
+	if err != nil {
+		logger.Error("Error while querying user table " + err.Error())
+		return nil, errs.NewNotFoundError("Unexpected database error")
 	}
 	//此时的数据库只初始化了name和userID的字段，其他字段还没涉及到sql查询
 	//所以这里返回的结构体会包含null值
@@ -40,25 +36,47 @@ func (d UserRepositoryDb) FindAll() ([]User, error) {
 
 func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
 	Usersql := "select userID, name from users where userID = ?"
-	row := d.client.QueryRow(Usersql, id)
+
 	var u User
-	err := row.Scan(&u.UserID, &u.Name)
+	err := d.client.Get(&u, Usersql, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			//没找到匹配项
-			return nil, errs.NewNotFoundError("user not found")
+			return nil, errs.NewNotFoundError("User not found")
 		} else {
-			log.Print("Error when scanning user" + err.Error())
-			//mysql服务未开启||数据库名称出错
+			logger.Error("Error while querying user table " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
 		}
 	}
+
+	return &u, nil
+}
+
+func (d UserRepositoryDb) Update(u User) (*User, *errs.AppError) {
+	// 更新 email 的 SQL 查询
+	query := "UPDATE users SET name = ? WHERE userID = ?;"
+
+	// 使用 Exec 执行更新操作
+	result, err := d.client.Exec(query, u.Name, u.UserID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 获取更新的行数
+	affectedRows, err := result.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if affectedRows == 0 {
+		return nil, errs.NewUnexpectedError("No rows were updated")
+	}
+
 	return &u, nil
 }
 
 func NewUserRepositoryDb() UserRepositoryDb {
 	//远程连接到数据库
-	client, err := sql.Open("mysql", "root:7tvkPQzKGe1Syv5E@tcp(127.0.0.1:3306)/sso")
+	client, err := sqlx.Open("mysql", "root:7tvkPQzKGe1Syv5E@tcp(127.0.0.1:3306)/sso")
 	if err != nil {
 		panic(err)
 	}
