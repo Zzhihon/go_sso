@@ -11,5 +11,6 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 )

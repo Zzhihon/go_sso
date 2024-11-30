@@ -54,13 +54,8 @@ func (s DefaultUserService) UpdateName(r dto.NewUpdateRequest) (*dto.UserRespons
 		return nil, err
 	}
 	u := domain.User{
-		UserID:      user.UserID,
-		Name:        name,
-		Grade:       "",
-		MajorClass:  "",
-		Email:       "",
-		PhoneNumber: "",
-		Status:      "",
+		UserID: user.UserID,
+		Name:   name,
 	}
 
 	newUser, err := s.repo.Update(u)

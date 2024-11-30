@@ -7,7 +7,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"log"
-	"time"
 )
 
 type UserRepositoryDb struct {
@@ -22,7 +21,8 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 		findAllSql := "select userID, name from users"
 		err = d.client.Select(&users, findAllSql)
 	} else {
-		findAllSql := "select userID, name from users"
+		//筛选出status为某一特定状态的所有用户
+		findAllSql := "select userID, name from users where status = ?"
 		err = d.client.Select(&users, findAllSql, status)
 	}
 	if err != nil {
@@ -74,15 +74,6 @@ func (d UserRepositoryDb) Update(u User) (*User, *errs.AppError) {
 	return &u, nil
 }
 
-func NewUserRepositoryDb() UserRepositoryDb {
-	//远程连接到数据库
-	client, err := sqlx.Open("mysql", "root:7tvkPQzKGe1Syv5E@tcp(127.0.0.1:3306)/sso")
-	if err != nil {
-		panic(err)
-	}
-	//配置mysql连接池
-	client.SetConnMaxLifetime(time.Minute * 3)
-	client.SetMaxOpenConns(10)
-	client.SetMaxIdleConns(10)
-	return UserRepositoryDb{client}
+func NewUserRepositoryDb(client *sqlx.DB) UserRepositoryDb {
+	return UserRepositoryDb{client: client}
 }
