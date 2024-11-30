@@ -2,10 +2,12 @@ package domain
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/Zzhihon/sso/errs"
 	"github.com/Zzhihon/sso/logger"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 )
 
@@ -67,6 +69,10 @@ func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
 		query = "UPDATE users SET phoneNumber = ? WHERE userID = ?;"
 		s = u.PhoneNumber.String
 	}
+	if imple == "Password" {
+		query = "UPDATE users SET password = ? WHERE userID = ?;"
+		s = u.Password
+	}
 
 	// 使用 Exec 执行更新操作
 	//UserID用来锁定row
@@ -87,6 +93,18 @@ func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
 	}
 
 	return &u, nil
+}
+
+func (d UserRepositoryDb) CheckPassword(u User, originPassword string) (bool, *errs.AppError) {
+
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(originPassword))
+	if err != nil {
+		fmt.Println("Password does not match")
+		return false, errs.NewUnexpectedError("Password does not match")
+	}
+
+	return true, nil
+
 }
 
 func NewUserRepositoryDb(client *sqlx.DB) UserRepositoryDb {

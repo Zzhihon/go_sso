@@ -16,11 +16,27 @@ type AuthRepositoryDb struct {
 }
 
 func (d AuthRepositoryDb) FindBy(userID string, password string) (*Login, error) {
+
+	//后续加上哈希加密验证
+	//sqlVerify := `SELECT userID, password FROM users WHERE userID = ?`
+	//var storedPassword string
+	//err := d.client.QueryRow(sqlVerify, userID).Scan(&userID, &storedPassword)
+	//if err != nil {
+	//	// 处理查询错误
+	//	return nil, err
+	//}
+	//
+	//// 验证用户输入的密码与数据库中的哈希密码是否匹配
+	//err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password))
+	//if err != nil {
+	//	// 密码不匹配
+	//	return nil, err
+	//}
+
 	var login Login
 	sqlVerify := `SELECT userID, password FROM users WHERE userID = ? and password = ?`
 
 	//通过用户名和密码进行验证是否存在符合的用户
-	//后续加上哈希加密验证
 	err := d.client.Get(&login, sqlVerify, userID, password)
 	if err != nil {
 		//未找到匹配的用户(密码或id错误)

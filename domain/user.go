@@ -22,6 +22,7 @@ type UserRepository interface {
 	FindAll(status string) ([]User, *errs.AppError)
 	ById(string) (*User, *errs.AppError)
 	Update(User, string) (*User, *errs.AppError)
+	CheckPassword(User, string) (bool, *errs.AppError)
 }
 
 func (u User) StatusAsText() string {

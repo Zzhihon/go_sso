@@ -4,6 +4,7 @@ import (
 	"github.com/Zzhihon/sso/domain"
 	"github.com/Zzhihon/sso/dto"
 	"github.com/Zzhihon/sso/errs"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
@@ -48,6 +49,7 @@ func (s DefaultUserService) GetUser(id string) (*dto.UserResponse, *errs.AppErro
 
 func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError) {
 	id := r.UserID
+	var newUser *domain.User
 	//寻找有无匹配id的用户
 	user, err := s.repo.ById(id)
 	if err != nil {
@@ -64,13 +66,43 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 	if r.Impl == "PhoneNumber" {
 		user.PhoneNumber.String = r.PhoneNumber
 	}
+	if r.Impl == "Password" {
 
-	newUser, err := s.repo.Update(*user, r.Impl)
+		//flag, errr := s.repo.CheckPassword(*user, r.OriginPassword)
+		//if errr != nil {
+		//	return nil, errr
+		//} else if flag {
+		//	password, err := hashPassword(r.NewPassword)
+		//	if err != nil {
+		//		return nil, errs.NewUnexpectedError(err.Error())
+		//	}
+		//	user.Password = password
+		//}
+
+		//password, err := hashPassword(r.NewPassword)
+		//if err != nil {
+		//	return nil, errs.NewUnexpectedError(err.Error())
+		//}
+		//user.Password = password
+		user.Password = r.NewPassword
+
+	}
+
+	newUser, err = s.repo.Update(*user, r.Impl)
 	if err != nil {
 		return nil, err
 	}
 	response := newUser.ToDto()
 	return &response, nil
+}
+
+func hashPassword(password string) (string, error) {
+	// bcrypt生成哈希密码，生成的哈希值是一个加盐哈希（salted hash）
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
 }
 
 func NewUserService(repository domain.UserRepository) DefaultUserService {
