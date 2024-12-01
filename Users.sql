@@ -13,7 +13,7 @@ CREATE TABLE `users` (
     PRIMARY KEY (`userID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `users` VALUES
+INSERT INTO `users` (`userID`, `password`, `name`) VALUES
   ('20233802086', 'qweasd','黄智泓'),
   ('20223808888', 'qweasd','万睿杰'),
   ('20241111111', 'qweasd','刘恒'),
