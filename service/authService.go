@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Zzhihon/sso/domain"
 	"github.com/Zzhihon/sso/dto"
+	"github.com/Zzhihon/sso/utils"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 )
@@ -81,7 +82,7 @@ func (s DefaultAuthService) Refresh(request dto.RefreshRequest) (*dto.RefreshTok
 
 func jwtTokenFromString(tokenstring string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenstring, func(token *jwt.Token) (interface{}, error) {
-		return []byte(domain.HMAC_SAMPLE_SECRET), nil
+		return []byte(utils.SECRET), nil
 	})
 	if err != nil {
 		log.Println("Error while parsing token" + err.Error())

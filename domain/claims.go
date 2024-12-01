@@ -1,13 +1,10 @@
 package domain
 
 import (
+	"github.com/Zzhihon/sso/utils"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )
-
-const HMAC_SAMPLE_SECRET = "hmacSampleSecret"
-const ACCESS_TOKEN_DURATION = 1
-const REFRESH_TOKEN_DURATION = time.Hour * 24 * 30
 
 type RefreshTokenClaims struct {
 	TokenType string `json:"tokenType"`
@@ -31,7 +28,7 @@ func (c AccessTokenClaims) RefreshTokenClaims() RefreshTokenClaims {
 		Name:      c.Name,
 		Role:      c.Role,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(REFRESH_TOKEN_DURATION).Unix(),
+			ExpiresAt: time.Now().Add(utils.REFRESH_TOKEN_DURATION).Unix(),
 		},
 	}
 }
@@ -42,7 +39,7 @@ func (c RefreshTokenClaims) AccessTokenClaims() AccessTokenClaims {
 		Name:   c.Name,
 		Role:   c.Role,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(ACCESS_TOKEN_DURATION).Unix(),
+			ExpiresAt: time.Now().Add(utils.ACCESS_TOKEN_DURATION).Unix(),
 		},
 	}
 }

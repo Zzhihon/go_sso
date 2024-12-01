@@ -2,6 +2,7 @@ package domain
 
 import (
 	"database/sql"
+	"github.com/Zzhihon/sso/utils"
 	"github.com/dgrijalva/jwt-go"
 	"time"
 )
@@ -19,5 +20,5 @@ func (l Login) ClaimsForAccessToken() AccessTokenClaims {
 		Name:   l.Name,
 		Role:   l.Role.String,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(ACCESS_TOKEN_DURATION).Unix()}}
+			ExpiresAt: time.Now().Add(utils.ACCESS_TOKEN_DURATION).Unix()}}
 }

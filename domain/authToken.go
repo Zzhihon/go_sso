@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/Zzhihon/sso/utils"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 )
@@ -17,7 +18,7 @@ func NewAuthToken(claims AccessTokenClaims) AuthToken {
 
 // 生成access token
 func (t AuthToken) NewAccessToken() (string, error) {
-	signedString, err := t.token.SignedString([]byte(HMAC_SAMPLE_SECRET))
+	signedString, err := t.token.SignedString([]byte(utils.SECRET))
 	if err != nil {
 		log.Println("Failed to sign access token" + err.Error())
 		return "", err
@@ -29,7 +30,7 @@ func (t AuthToken) VerifyAccessToken() (string, error) {
 	c := t.token.Claims.(AccessTokenClaims)
 	refreshTokenClaims := c.RefreshTokenClaims()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	signedString, err := token.SignedString([]byte(HMAC_SAMPLE_SECRET))
+	signedString, err := token.SignedString([]byte(utils.SECRET))
 	if err != nil {
 		log.Println("Failed to sign refresh token" + err.Error())
 		return "", err
@@ -41,7 +42,7 @@ func (t AuthToken) newRefreshToken() (string, error) {
 	c := t.token.Claims.(AccessTokenClaims)
 	refreshTokenClaims := c.RefreshTokenClaims()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	signedString, err := token.SignedString([]byte(HMAC_SAMPLE_SECRET))
+	signedString, err := token.SignedString([]byte(utils.SECRET))
 	if err != nil {
 		log.Println("Failed to sign refresh token" + err.Error())
 		return "", err
@@ -51,7 +52,7 @@ func (t AuthToken) newRefreshToken() (string, error) {
 
 func NewAccessTokenFromRefreshToken(refreshToken string) (string, error) {
 	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(HMAC_SAMPLE_SECRET), nil
+		return []byte(utils.SECRET), nil
 	})
 	if err != nil {
 		log.Println("Failed to parse refresh token" + err.Error())
