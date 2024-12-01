@@ -20,6 +20,7 @@ func Start() {
 
 	router.HandleFunc("/login", ah.Login).Methods(http.MethodPost)
 	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)
+	router.HandleFunc("/refresh", ah.Refresh).Methods(http.MethodPost)
 
 	router.HandleFunc("/Update/{impl:[a-zA-Z0-9]+}", ch.update).Methods((http.MethodPost))
 	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods("GET")

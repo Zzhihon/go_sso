@@ -10,6 +10,7 @@ import (
 type AuthRepository interface {
 	FindBy(userID string, password string) (*Login, error)
 	GenerateRefreshToken(token AuthToken) (string, error)
+	RefreshTokenExists(refreshToken string) error
 }
 
 type AuthRepositoryDb struct {
@@ -18,7 +19,7 @@ type AuthRepositoryDb struct {
 
 func (d AuthRepositoryDb) FindBy(userID string, password string) (*Login, error) {
 
-	//后续加上哈希加密验证
+	//后续加上哈希加密验证的适配
 	//sqlVerify := `SELECT userID, password FROM users WHERE userID = ?`
 	//var storedPassword string
 	//err := d.client.QueryRow(sqlVerify, userID).Scan(&userID, &storedPassword)
@@ -41,12 +42,12 @@ func (d AuthRepositoryDb) FindBy(userID string, password string) (*Login, error)
 	err := d.client.Get(&login, sqlVerify, userID, password)
 	if err != nil {
 		//未找到匹配的用户(密码或id错误)
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.New("invalid credentials")
 		} else {
 			//其他错误
 			log.Println("Error while verifying login request from database: " + err.Error())
-			return nil, errors.New("Unexpected database error")
+			return nil, errors.New("unexpected database error")
 		}
 	}
 
@@ -68,6 +69,22 @@ func (d AuthRepositoryDb) GenerateRefreshToken(authtoken AuthToken) (string, err
 		return "", err
 	}
 	return refreshToken, nil
+}
+
+func (d AuthRepositoryDb) RefreshTokenExists(refreshtoken string) error {
+	sqlSelect := `SELECT refreshToken FROM refresh_token WHERE refreshToken = ?`
+	var refreshToken string
+	err := d.client.Get(&refreshToken, sqlSelect, refreshtoken)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Println("Refresh token does not exist")
+			return errors.New("invalid refresh token")
+		} else {
+			log.Println("Error while querying refresh token from database: " + err.Error())
+			return errors.New("unexpected database error")
+		}
+	}
+	return nil
 }
 
 func NewAuthRepositoryDb(client *sqlx.DB) AuthRepository {

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"github.com/Zzhihon/sso/domain"
 	"github.com/Zzhihon/sso/dto"
 	"github.com/dgrijalva/jwt-go"
@@ -10,6 +11,7 @@ import (
 type AuthService interface {
 	Login(dto.LoginRequest) (*dto.LoginResponse, error)
 	Verify(token string) (bool, error)
+	Refresh(request dto.RefreshRequest) (*dto.RefreshTokenResponse, error)
 }
 
 type DefaultAuthService struct {
@@ -53,6 +55,28 @@ func (s DefaultAuthService) Verify(token string) (bool, error) {
 			return false, err
 		}
 	}
+}
+
+func (s DefaultAuthService) Refresh(request dto.RefreshRequest) (*dto.RefreshTokenResponse, error) {
+	if vErr := request.IsAccessTokenValid(); vErr != nil {
+		if vErr.Errors == jwt.ValidationErrorExpired {
+			var appErr error
+			if appErr = s.repo.RefreshTokenExists(request.RefrestToken); appErr != nil {
+				return nil, appErr
+			}
+
+			var accessToken string
+			var err error
+			if accessToken, err = domain.NewAccessTokenFromRefreshToken(request.RefrestToken); err != nil {
+				return nil, err
+			}
+			return &dto.RefreshTokenResponse{
+				AccessToken: accessToken,
+			}, nil
+		}
+		return nil, vErr
+	}
+	return nil, errors.New("Can not generate a new access token until the current one is expired")
 }
 
 func jwtTokenFromString(tokenstring string) (*jwt.Token, error) {

@@ -6,7 +6,7 @@ import (
 )
 
 const HMAC_SAMPLE_SECRET = "hmacSampleSecret"
-const ACCESS_TOKEN_DURATION = time.Hour
+const ACCESS_TOKEN_DURATION = 1
 const REFRESH_TOKEN_DURATION = time.Hour * 24 * 30
 
 type RefreshTokenClaims struct {
@@ -30,6 +30,17 @@ func (c AccessTokenClaims) RefreshTokenClaims() RefreshTokenClaims {
 		UserID:    c.UserID,
 		Name:      c.Name,
 		Role:      c.Role,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(REFRESH_TOKEN_DURATION).Unix(),
+		},
+	}
+}
+
+func (c RefreshTokenClaims) AccessTokenClaims() AccessTokenClaims {
+	return AccessTokenClaims{
+		UserID: c.UserID,
+		Name:   c.Name,
+		Role:   c.Role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ACCESS_TOKEN_DURATION).Unix(),
 		},

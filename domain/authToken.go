@@ -25,7 +25,6 @@ func (t AuthToken) NewAccessToken() (string, error) {
 	return signedString, nil
 }
 
-// 生成refresh token
 func (t AuthToken) VerifyAccessToken() (string, error) {
 	c := t.token.Claims.(AccessTokenClaims)
 	refreshTokenClaims := c.RefreshTokenClaims()
@@ -48,4 +47,19 @@ func (t AuthToken) newRefreshToken() (string, error) {
 		return "", err
 	}
 	return signedString, nil
+}
+
+func NewAccessTokenFromRefreshToken(refreshToken string) (string, error) {
+	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(HMAC_SAMPLE_SECRET), nil
+	})
+	if err != nil {
+		log.Println("Failed to parse refresh token" + err.Error())
+		return "", err
+	}
+	r := token.Claims.(*RefreshTokenClaims)
+	accessTokenClaims := r.AccessTokenClaims()
+	authToken := NewAuthToken(accessTokenClaims)
+
+	return authToken.NewAccessToken()
 }

@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-const TOKEN_DURATION = time.Hour * 24
-
 type Login struct {
 	UserID   string         `json:"userID" db:"userID"`
 	Password string         `json:"password" db:"password"`

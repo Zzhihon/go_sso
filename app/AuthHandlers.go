@@ -49,3 +49,18 @@ func (h AuthHandlers) Verify(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, http.StatusUnauthorized, "Error while verify: "+"missing token")
 	}
 }
+
+func (h AuthHandlers) Refresh(w http.ResponseWriter, r *http.Request) {
+	var refreshRequest dto.RefreshRequest
+	err := json.NewDecoder(r.Body).Decode(&refreshRequest)
+	if err != nil {
+		writeResponse(w, http.StatusBadRequest, "Error while decoding: "+err.Error())
+	} else {
+		token, err := h.service.Refresh(refreshRequest)
+		if err != nil {
+			writeResponse(w, http.StatusUnauthorized, "Error while refresh: "+err.Error())
+		} else {
+			writeResponse(w, http.StatusOK, token)
+		}
+	}
+}
