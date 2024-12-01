@@ -25,3 +25,27 @@ func (h AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func (h AuthHandlers) Verify(w http.ResponseWriter, r *http.Request) {
+	var verifyRequest dto.VerifyRequest
+	var token string
+	err := json.NewDecoder(r.Body).Decode(&verifyRequest)
+	if err != nil {
+		writeResponse(w, http.StatusBadRequest, "Error while decoding: "+err.Error())
+	}
+	token = verifyRequest.Token
+	if token != "" {
+		isAuthorized, err := h.service.Verify(token)
+		if err != nil {
+			writeResponse(w, http.StatusUnauthorized, "Error while verify: "+err.Error())
+		} else {
+			if isAuthorized {
+				writeResponse(w, http.StatusOK, "Authorized")
+			} else {
+				writeResponse(w, http.StatusUnauthorized, "Error while verify: "+err.Error())
+			}
+		}
+	} else {
+		writeResponse(w, http.StatusUnauthorized, "Error while verify: "+"missing token")
+	}
+}

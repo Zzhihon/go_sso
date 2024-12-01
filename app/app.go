@@ -19,12 +19,11 @@ func Start() {
 	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()))}
 
 	router.HandleFunc("/login", ah.Login).Methods(http.MethodPost)
+	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)
+
 	router.HandleFunc("/Update/{impl:[a-zA-Z0-9]+}", ch.update).Methods((http.MethodPost))
 	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods("GET")
 	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
-	//router.HandleFunc("/auth/login", ah.Login).Methods(http.MethodPost)
-	//router.HandleFunc("/auth/refresh", ah.Refresh).Methods(http.MethodPost)
-	//router.HandleFunc("/auth/verify", ah.Verify).Methods(http.MethodPost)
 	//router.HandleFunc("/getUser/{username:[0-9]+}", getUser)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -22,7 +22,7 @@ func (l Login) GenerateToken() (*string, error) {
 
 	claims = l.MapClaimsForUSer()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedTokenString, err := token.SignedString([]byte(l.Name))
+	signedTokenString, err := token.SignedString([]byte(HMAC_SAMPLE_SECRET))
 	if err != nil {
 		log.Println("Failed to sign token" + err.Error())
 		return nil, err

@@ -16,6 +16,7 @@ type User struct {
 	Email       sql.NullString `db:"email"`
 	PhoneNumber sql.NullString `db:"phoneNumber"`
 	Status      sql.NullString `db:"status"`
+	Role        sql.NullString `db:"role"`
 }
 
 type UserRepository interface {

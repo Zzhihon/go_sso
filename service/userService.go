@@ -66,6 +66,9 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 	if r.Impl == "PhoneNumber" {
 		user.PhoneNumber.String = r.PhoneNumber
 	}
+	if r.Impl == "Role" {
+		user.Role.String = r.Role
+	}
 	if r.Impl == "Password" {
 
 		//flag, errr := s.repo.CheckPassword(*user, r.OriginPassword)

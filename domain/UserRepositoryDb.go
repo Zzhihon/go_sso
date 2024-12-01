@@ -73,6 +73,10 @@ func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
 		query = "UPDATE users SET password = ? WHERE userID = ?;"
 		s = u.Password
 	}
+	if imple == "Role" {
+		query = "UPDATE users SET role = ? WHERE userID = ?;"
+		s = u.Role.String
+	}
 
 	// 使用 Exec 执行更新操作
 	//UserID用来锁定row
