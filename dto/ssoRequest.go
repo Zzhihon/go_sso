@@ -6,15 +6,13 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-const HMAC_SAMPLE_SECRET = "hmacSampleSecret"
-
 type LoginRequest struct {
 	UserID   string `json:"userID"`
 	Password string `json:"password"`
 }
 
 type VerifyRequest struct {
-	Token string `json:"token"`
+	Token string `json:"access_token"`
 }
 
 type RefreshRequest struct {
