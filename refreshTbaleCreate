@@ -1,0 +1,5 @@
+create table `refresh_Token` (
+	`refreshToken` varchar(300) not null,
+	 created_on TIMESTAMP default CURRENT_TIMESTAMP,
+	 primary key (`refreshToken`)
+) engine=InnoDB default CHARSET=utf8mb4

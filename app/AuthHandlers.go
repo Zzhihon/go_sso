@@ -17,11 +17,11 @@ func (h AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		writeResponse(w, http.StatusBadRequest, "Error while decoding: "+err.Error())
 	} else {
-		token, err := h.service.Login(loginRequest)
+		tokens, err := h.service.Login(loginRequest)
 		if err != nil {
 			writeResponse(w, http.StatusUnauthorized, "Error while login: "+err.Error())
 		} else {
-			writeResponse(w, http.StatusOK, token)
+			writeResponse(w, http.StatusOK, tokens)
 		}
 	}
 }

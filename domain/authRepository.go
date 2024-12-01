@@ -9,6 +9,7 @@ import (
 
 type AuthRepository interface {
 	FindBy(userID string, password string) (*Login, error)
+	GenerateRefreshToken(token AuthToken) (string, error)
 }
 
 type AuthRepositoryDb struct {
@@ -51,6 +52,22 @@ func (d AuthRepositoryDb) FindBy(userID string, password string) (*Login, error)
 
 	return &login, nil
 
+}
+
+func (d AuthRepositoryDb) GenerateRefreshToken(authtoken AuthToken) (string, error) {
+	var err error
+	var refreshToken string
+	if refreshToken, err = authtoken.newRefreshToken(); err != nil {
+		return "", err
+	}
+
+	sqlInsert := `INSERT INTO refresh_token (refreshToken) VALUES (?)`
+	_, err = d.client.Exec(sqlInsert, refreshToken)
+	if err != nil {
+		log.Println("Error while inserting new refresh token from database: " + err.Error())
+		return "", err
+	}
+	return refreshToken, nil
 }
 
 func NewAuthRepositoryDb(client *sqlx.DB) AuthRepository {

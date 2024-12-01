@@ -8,7 +8,7 @@ import (
 )
 
 type AuthService interface {
-	Login(dto.LoginRequest) (*string, error)
+	Login(dto.LoginRequest) (*dto.LoginResponse, error)
 	Verify(token string) (bool, error)
 }
 
@@ -16,16 +16,30 @@ type DefaultAuthService struct {
 	repo domain.AuthRepository
 }
 
-func (s DefaultAuthService) Login(req dto.LoginRequest) (*string, error) {
-	login, err := s.repo.FindBy(req.UserID, req.Password)
+func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
+	var login *domain.Login
+	var err error
+
+	login, err = s.repo.FindBy(req.UserID, req.Password)
 	if err != nil {
 		return nil, err
 	}
-	token, err := login.GenerateToken()
-	if err != nil {
+
+	claims := login.ClaimsForAccessToken()
+	authToken := domain.NewAuthToken(claims)
+	var accessToken, refreshToken string
+	if accessToken, err = authToken.NewAccessToken(); err != nil {
 		return nil, err
 	}
-	return token, nil
+
+	if refreshToken, err = s.repo.GenerateRefreshToken(authToken); err != nil {
+		return nil, err
+	}
+
+	return &dto.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 func (s DefaultAuthService) Verify(token string) (bool, error) {
