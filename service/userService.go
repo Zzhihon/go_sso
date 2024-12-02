@@ -72,10 +72,10 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 	}
 	if r.Impl == "Password" {
 
-		_, ePrr := s.utilsRepo.CheckPassword(id, r.OldPassword)
-		if ePrr != nil {
-			return nil, errs.NewUnexpectedError(ePrr.Error())
-		}
+		//_, ePrr := s.utilsRepo.CheckPassword(id, r.OldPassword)
+		//if ePrr != nil {
+		//	return nil, errs.NewUnexpectedError(ePrr.Error())
+		//}
 
 		password, err := hashPassword(r.NewPassword)
 		if err != nil {

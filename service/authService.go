@@ -24,12 +24,13 @@ func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, err
 	var login *domain.Login
 	var err error
 
+	//检查用户名和密码是否正确
 	_, pErr := s.utilsRepo.CheckPassword(req.UserID, req.Password)
 	if pErr != nil {
 		return nil, pErr
 	}
 
-	login, err = s.repo.FindBy(req.UserID, req.Password)
+	login, err = s.repo.FindBy(req.UserID)
 	if err != nil {
 		return nil, err
 	}
