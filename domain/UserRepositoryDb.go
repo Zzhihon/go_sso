@@ -20,6 +20,7 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 	if status == "" {
 		findAllSql := "select userID, name from users"
 		err = d.client.Select(&users, findAllSql)
+
 	} else {
 		//筛选出status为某一特定状态的所有用户
 		findAllSql := "select userID, name from users where status = ?"
@@ -27,7 +28,7 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 	}
 	if err != nil {
 		logger.Error("Error while querying user table " + err.Error())
-		return nil, errs.NewNotFoundError("Unexpected database error")
+		return nil, errs.NewNotFoundError(err.Error())
 	}
 	//此时的数据库只初始化了name和userID的字段，其他字段还没涉及到sql查询
 	//所以这里返回的结构体会包含null值
@@ -41,10 +42,10 @@ func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
 	err := d.client.Get(&u, Usersql, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errs.NewNotFoundError("User not found")
+			return nil, errs.NewNotFoundError("user id does not exist")
 		} else {
 			logger.Error("Error while querying user table " + err.Error())
-			return nil, errs.NewUnexpectedError("Unexpected database error")
+			return nil, errs.NewBadGatewayError(err.Error())
 		}
 	}
 
@@ -82,6 +83,7 @@ func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
 	result, err := d.client.Exec(query, s, u.UserID)
 	if err != nil {
 		log.Fatal(err)
+		return nil, errs.NewUnexpectedError(err.Error())
 	}
 
 	// 获取更新的行数
@@ -89,9 +91,9 @@ func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//异常处理
+	//如果没有更新的话
 	if affectedRows == 0 {
-		return nil, errs.NewUnexpectedError("No rows were updated")
+		return &u, nil
 	}
 
 	return &u, nil

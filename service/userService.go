@@ -40,7 +40,13 @@ func (s DefaultUserService) GetAllUsers(status string) ([]dto.UserResponse, *err
 }
 
 func (s DefaultUserService) GetUser(id string) (*dto.UserResponse, *errs.AppError) {
+	err := checkUserId(id)
+	if err != nil {
+		return nil, err
+	}
+
 	u, err := s.repo.ById(id)
+
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +56,10 @@ func (s DefaultUserService) GetUser(id string) (*dto.UserResponse, *errs.AppErro
 
 func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError) {
 	id := r.UserID
+	err := checkUserId(id)
+	if err != nil {
+		return nil, err
+	}
 	var newUser *domain.User
 	//寻找有无匹配id的用户
 	user, err := s.repo.ById(id)
@@ -59,27 +69,46 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 
 	//Update
 	if r.Impl == "Name" {
+		if r.Name == "" {
+			return nil, errs.NewUnexpectedError("invalid name")
+		}
 		user.Name = r.Name
 	}
 	if r.Impl == "Email" {
+		if r.Email == "" {
+			return nil, errs.NewUnexpectedError("invalid email")
+		}
 		user.Email.String = r.Email
 	}
 	if r.Impl == "PhoneNumber" {
+		if r.PhoneNumber == "" {
+			return nil, errs.NewUnexpectedError("invalid phoneNumber")
+		}
 		user.PhoneNumber.String = r.PhoneNumber
 	}
 	if r.Impl == "Role" {
+		if r.Role == "" {
+			return nil, errs.NewUnexpectedError("invalid role")
+		}
 		user.Role.String = r.Role
 	}
 	if r.Impl == "Password" {
+		if r.OldPassword == "" {
+			return nil, errs.NewUnexpectedError("invalid oldPassword")
+		}
 
 		_, ePrr := s.utilsRepo.CheckPassword(id, r.OldPassword)
 		if ePrr != nil {
-			return nil, errs.NewUnexpectedError(ePrr.Error())
+			return nil, ePrr
+		}
+
+		if r.NewPassword == "" {
+			return nil, errs.NewUnexpectedError("invalid newPassword")
 		}
 
 		password, err := hashPassword(r.NewPassword)
 		if err != nil {
-			return nil, errs.NewUnexpectedError(err.Error())
+			return nil, err
 		}
 		user.Password = password
 	}
@@ -92,13 +121,20 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 	return &response, nil
 }
 
-func hashPassword(password string) (string, error) {
+func hashPassword(password string) (string, *errs.AppError) {
 	// bcrypt生成哈希密码，生成的哈希值是一个加盐哈希（salted hash）
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", err
+		return "", errs.NewUnexpectedError(err.Error())
 	}
 	return string(hashedPassword), nil
+}
+
+func checkUserId(id string) *errs.AppError {
+	if id == "" {
+		return errs.NewUnexpectedError("invalid user id")
+	}
+	return nil
 }
 
 func NewUserService(repo domain.UserRepository, utilsRepo domain.UtilsRepository) DefaultUserService {
