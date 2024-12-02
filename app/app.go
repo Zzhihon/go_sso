@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"os"
@@ -27,7 +28,7 @@ func Start() {
 	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)
 	router.HandleFunc("/refresh", ah.Refresh).Methods(http.MethodPost)
 
-	router.HandleFunc("/Update/{impl:[a-zA-Z0-9]+}", ch.update).Methods((http.MethodPost))
+	router.HandleFunc("/Update/{impl:[a-zA-Z0-9]+}", ch.update).Methods(http.MethodPost)
 	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods("GET")
 	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
 	//router.HandleFunc("/getUser/{username:[0-9]+}", getUser)
@@ -40,6 +41,14 @@ func getDBClient() *sqlx.DB {
 	dbAddr := os.Getenv("DB_ADDR")
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
+
+	// postgresql数据库连接信息
+	//dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",dbAddr, dbPort, dbUser, dbPasswd, dbName)
+	//db, err := sqlx.Connect("postgres", dsn) // 使用 PostgreSQL 驱动
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer db.Close()
 
 	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
 	client, err := sqlx.Open("mysql", dataSource)

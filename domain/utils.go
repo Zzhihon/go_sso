@@ -18,7 +18,7 @@ type UtilsRepositoryDb struct {
 }
 
 func (d UtilsRepositoryDb) CheckPassword(id string, inputpassword string) (bool, *errs.AppError) {
-	Usersql := "select password from users where userID = ?"
+	Usersql := "select password from account_customuser where username = ?"
 	var password string
 	err := d.client.Get(&password, Usersql, id)
 	if err != nil {

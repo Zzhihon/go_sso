@@ -8,14 +8,15 @@ import (
 
 type User struct {
 	//sql.NullString用来与mysql的NULL进行映射
-	UserID      string         `db:"userID"`
+	UserID      string         `db:"username"`
 	Password    string         `db:"password"`
 	Name        string         `db:"name"`
 	Grade       sql.NullString `db:"grade"`
-	MajorClass  sql.NullString `db:"majorClass"`
+	MajorClass  sql.NullString `db:"major_class"`
 	Email       sql.NullString `db:"email"`
-	PhoneNumber sql.NullString `db:"phoneNumber"`
+	PhoneNumber sql.NullString `db:"phone_number"`
 	Status      sql.NullString `db:"status"`
+	IsActive    bool           `db:"is_active"`
 	Role        sql.NullString `db:"role"`
 }
 

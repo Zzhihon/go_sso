@@ -18,12 +18,12 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 	users := make([]User, 0)
 
 	if status == "" {
-		findAllSql := "select userID, name from users"
+		findAllSql := "select username, name from account_customuser"
 		err = d.client.Select(&users, findAllSql)
 
 	} else {
 		//筛选出status为某一特定状态的所有用户
-		findAllSql := "select userID, name from users where status = ?"
+		findAllSql := "select username, name from account_customuser where status = ?"
 		err = d.client.Select(&users, findAllSql, status)
 	}
 	if err != nil {
@@ -36,7 +36,7 @@ func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 }
 
 func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
-	Usersql := "select userID, name, email, phoneNumber, grade, majorClass, status from users where userID = ?"
+	Usersql := "select username, name, email, phone_number, grade, major_class, status from account_customuser where username = ?"
 
 	var u User
 	err := d.client.Get(&u, Usersql, id)
@@ -57,23 +57,23 @@ func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
 	var s string
 	//用imple识别用户要修改的字段
 	if imple == "Name" {
-		query = "UPDATE users SET name = ? WHERE userID = ?;"
+		query = "UPDATE account_customuser SET name = ? WHERE username = ?;"
 		s = u.Name
 	}
 	if imple == "Email" {
-		query = "UPDATE users SET email = ? WHERE userID = ?;"
+		query = "UPDATE account_customuser SET email = ? WHERE username = ?;"
 		s = u.Email.String
 	}
 	if imple == "PhoneNumber" {
-		query = "UPDATE users SET phoneNumber = ? WHERE userID = ?;"
+		query = "UPDATE account_customuser SET phone_number = ? WHERE username = ?;"
 		s = u.PhoneNumber.String
 	}
 	if imple == "Password" {
-		query = "UPDATE users SET password = ? WHERE userID = ?;"
+		query = "UPDATE account_customuser SET password = ? WHERE username = ?;"
 		s = u.Password
 	}
 	if imple == "Role" {
-		query = "UPDATE users SET role = ? WHERE userID = ?;"
+		query = "UPDATE account_customuser SET role = ? WHERE username = ?;"
 		s = u.Role.String
 	}
 

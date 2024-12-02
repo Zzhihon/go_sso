@@ -8,7 +8,7 @@ import (
 )
 
 type Login struct {
-	UserID   string         `json:"userID" db:"userID"`
+	UserID   string         `json:"userID" db:"username"`
 	Password string         `json:"password" db:"password"`
 	Name     string         `json:"name" db:"name"`
 	Role     sql.NullString `json:"role" db:"role"`

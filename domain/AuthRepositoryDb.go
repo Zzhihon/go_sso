@@ -15,7 +15,7 @@ type AuthRepositoryDb struct {
 func (d AuthRepositoryDb) FindBy(userID string) (*Login, *errs.AppError) {
 
 	var login Login
-	sqlVerify := `SELECT userID, name, role FROM users WHERE userID = ?`
+	sqlVerify := `SELECT username, name, role FROM account_customuser WHERE username = ?`
 
 	//通过用户名和密码进行验证是否存在符合的用户
 	err := d.client.Get(&login, sqlVerify, userID)
