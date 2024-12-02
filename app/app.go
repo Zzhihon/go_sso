@@ -1,16 +1,21 @@
 package app
 
 import (
+	"fmt"
 	"github.com/Zzhihon/sso/domain"
+	"github.com/Zzhihon/sso/logger"
 	"github.com/Zzhihon/sso/service"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
 func Start() {
+	sanityCheck()
 	router := mux.NewRouter()
 
 	//初始化一个服务，同时要给这个服务注入依赖(Repo)
@@ -30,14 +35,42 @@ func Start() {
 }
 
 func getDBClient() *sqlx.DB {
-	//远程连接到数据库
-	client, err := sqlx.Open("mysql", "root:7tvkPQzKGe1Syv5E@tcp(127.0.0.1:3306)/sso")
+	dbUser := os.Getenv("DB_USER")
+	dbPasswd := os.Getenv("DB_PASSWD")
+	dbAddr := os.Getenv("DB_ADDR")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
+	client, err := sqlx.Open("mysql", dataSource)
 	if err != nil {
 		panic(err)
 	}
-	//配置mysql连接池
+	// See "Important settings" section.
 	client.SetConnMaxLifetime(time.Minute * 3)
 	client.SetMaxOpenConns(10)
 	client.SetMaxIdleConns(10)
 	return client
+}
+
+func sanityCheck() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	logger.Info("load .env success")
+	envProps := []string{
+		"SERVER_PORT",
+		"DB_USER",
+		"DB_PASSWD",
+		"DB_ADDR",
+		"DB_PORT",
+		"DB_NAME",
+	}
+	for _, k := range envProps {
+		if os.Getenv(k) == "" {
+			logger.Error(fmt.Sprintf("Environment variable %s not defined. Terminating application...", k))
+		}
+	}
 }
