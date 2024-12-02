@@ -15,8 +15,8 @@ func Start() {
 
 	//初始化一个服务，同时要给这个服务注入依赖(Repo)
 	//handler通过Service接口实现业务逻辑，同时依赖Repo来实现与数据库的操作
-	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb(getDBClient()))}
-	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()))}
+	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()))}
+	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()))}
 
 	router.HandleFunc("/login", ah.Login).Methods(http.MethodPost)
 	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)

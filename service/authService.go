@@ -16,12 +16,18 @@ type AuthService interface {
 }
 
 type DefaultAuthService struct {
-	repo domain.AuthRepository
+	repo      domain.AuthRepository
+	utilsRepo domain.UtilsRepository
 }
 
 func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 	var login *domain.Login
 	var err error
+
+	_, pErr := s.utilsRepo.CheckPassword(req.UserID, req.Password)
+	if pErr != nil {
+		return nil, pErr
+	}
 
 	login, err = s.repo.FindBy(req.UserID, req.Password)
 	if err != nil {
@@ -77,7 +83,7 @@ func (s DefaultAuthService) Refresh(request dto.RefreshRequest) (*dto.RefreshTok
 		}
 		return nil, vErr
 	}
-	return nil, errors.New("Can not generate a new access token until the current one is expired")
+	return nil, errors.New("can not generate a new access token until the current one is expired")
 }
 
 func jwtTokenFromString(tokenstring string) (*jwt.Token, error) {
@@ -91,6 +97,9 @@ func jwtTokenFromString(tokenstring string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func NewAuthService(repo domain.AuthRepository) DefaultAuthService {
-	return DefaultAuthService{repo: repo}
+func NewAuthService(repo domain.AuthRepository, utilsRepo domain.UtilsRepository) DefaultAuthService {
+	return DefaultAuthService{
+		repo:      repo,
+		utilsRepo: utilsRepo,
+	}
 }

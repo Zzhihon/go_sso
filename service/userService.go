@@ -14,7 +14,8 @@ type UserService interface {
 }
 
 type DefaultUserService struct {
-	repo domain.UserRepository
+	repo      domain.UserRepository
+	utilsRepo domain.UtilsRepository
 }
 
 func (s DefaultUserService) GetAllUsers(status string) ([]dto.UserResponse, *errs.AppError) {
@@ -71,24 +72,16 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 	}
 	if r.Impl == "Password" {
 
-		//flag, errr := s.repo.CheckPassword(*user, r.OriginPassword)
-		//if errr != nil {
-		//	return nil, errr
-		//} else if flag {
-		//	password, err := hashPassword(r.NewPassword)
-		//	if err != nil {
-		//		return nil, errs.NewUnexpectedError(err.Error())
-		//	}
-		//	user.Password = password
-		//}
+		_, ePrr := s.utilsRepo.CheckPassword(id, r.OldPassword)
+		if ePrr != nil {
+			return nil, errs.NewUnexpectedError(ePrr.Error())
+		}
 
-		//password, err := hashPassword(r.NewPassword)
-		//if err != nil {
-		//	return nil, errs.NewUnexpectedError(err.Error())
-		//}
-		//user.Password = password
-		user.Password = r.NewPassword
-
+		password, err := hashPassword(r.NewPassword)
+		if err != nil {
+			return nil, errs.NewUnexpectedError(err.Error())
+		}
+		user.Password = password
 	}
 
 	newUser, err = s.repo.Update(*user, r.Impl)
@@ -108,6 +101,9 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func NewUserService(repository domain.UserRepository) DefaultUserService {
-	return DefaultUserService{repository}
+func NewUserService(repo domain.UserRepository, utilsRepo domain.UtilsRepository) DefaultUserService {
+	return DefaultUserService{
+		repo:      repo,
+		utilsRepo: utilsRepo,
+	}
 }
