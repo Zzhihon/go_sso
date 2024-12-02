@@ -69,8 +69,7 @@ tips:field为要修改的字段
 +返回体
 ```
 {
-{
-    "userId": "20233802086",
+    "userId": string,
     "name": string,
     "grade": string,
     "majorClass": string,
@@ -78,7 +77,7 @@ tips:field为要修改的字段
     "phoneNumber": string,
     "status": string
 }
-}
+
 ```
   
   
