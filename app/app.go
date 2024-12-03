@@ -1,10 +1,12 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/Zzhihon/sso/domain"
 	"github.com/Zzhihon/sso/logger"
 	"github.com/Zzhihon/sso/service"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
@@ -22,7 +24,7 @@ func Start() {
 	//初始化一个服务，同时要给这个服务注入依赖(Repo)
 	//handler通过Service接口实现业务逻辑，同时依赖Repo来实现与数据库的操作
 	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()))}
-	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()))}
+	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()), domain.NewAuthRepositoryRedisImpl(initRedis(), context.Background()))}
 
 	router.HandleFunc("/login", ah.Login).Methods(http.MethodPost)
 	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)
@@ -60,6 +62,16 @@ func getDBClient() *sqlx.DB {
 	client.SetMaxOpenConns(10)
 	client.SetMaxIdleConns(10)
 	return client
+}
+
+func initRedis() *redis.Client {
+	var rdb *redis.Client
+	rdb = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	return rdb
 }
 
 func sanityCheck() {

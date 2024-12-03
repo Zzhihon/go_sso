@@ -18,6 +18,7 @@ type AuthService interface {
 type DefaultAuthService struct {
 	repo      domain.AuthRepository
 	utilsRepo domain.UtilsRepository
+	redis     domain.AuthRepositoryRedis
 }
 
 func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError) {
@@ -41,7 +42,13 @@ func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *er
 		return nil, err
 	}
 
-	if refreshToken, err = s.repo.GenerateRefreshToken(authToken); err != nil {
+	//db
+	//if refreshToken, err = s.repo.GenerateRefreshToken(authToken); err != nil {
+	//	return nil, err
+	//}
+
+	//redis
+	if refreshToken, err = s.redis.GenerateRefreshToken(authToken); err != nil {
 		return nil, err
 	}
 
@@ -68,7 +75,7 @@ func (s DefaultAuthService) Refresh(request dto.RefreshRequest) (*dto.RefreshTok
 	if vErr := request.IsAccessTokenValid(); vErr != nil {
 		if vErr.Errors == jwt.ValidationErrorExpired {
 			var appErr *errs.AppError
-			if appErr = s.repo.RefreshTokenExists(request.RefrestToken); appErr != nil {
+			if appErr = s.redis.RefreshTokenExists(request.RefrestToken); appErr != nil {
 				return nil, appErr
 			}
 
@@ -97,9 +104,10 @@ func jwtTokenFromString(tokenstring string) (*jwt.Token, *errs.AppError) {
 	return token, nil
 }
 
-func NewAuthService(repo domain.AuthRepository, utilsRepo domain.UtilsRepository) DefaultAuthService {
+func NewAuthService(repo domain.AuthRepository, utilsRepo domain.UtilsRepository, redis domain.AuthRepositoryRedis) DefaultAuthService {
 	return DefaultAuthService{
 		repo:      repo,
 		utilsRepo: utilsRepo,
+		redis:     redis,
 	}
 }
