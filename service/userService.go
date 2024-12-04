@@ -1,21 +1,30 @@
 package service
 
 import (
+	"bytes"
 	"github.com/Zzhihon/sso/domain"
 	"github.com/Zzhihon/sso/dto"
 	"github.com/Zzhihon/sso/errs"
+	"github.com/Zzhihon/sso/utils"
+	"github.com/go-gomail/gomail"
 	"golang.org/x/crypto/bcrypt"
+	"html/template"
+	"log"
+	"math/rand"
+	"time"
 )
 
 type UserService interface {
 	GetAllUsers(status string) ([]dto.UserResponse, *errs.AppError)
 	GetUser(id string) (*dto.UserResponse, *errs.AppError)
 	Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError)
+	IsEmailValid(r dto.CheckEmailRequest) (string, *errs.AppError)
 }
 
 type DefaultUserService struct {
 	repo      domain.UserRepository
 	utilsRepo domain.UtilsRepository
+	redis     domain.RedisRepository
 }
 
 func (s DefaultUserService) GetAllUsers(status string) ([]dto.UserResponse, *errs.AppError) {
@@ -52,6 +61,90 @@ func (s DefaultUserService) GetUser(id string) (*dto.UserResponse, *errs.AppErro
 	}
 	response := u.ToDto()
 	return &response, nil
+}
+
+func (s DefaultUserService) IsEmailValid(r dto.CheckEmailRequest) (string, *errs.AppError) {
+	var err *errs.AppError
+
+	err = checkUserId(r.UserID)
+	if err != nil {
+		return "", err
+	}
+	
+	err = s.repo.IsEmailValid(r.UserID, r.Email)
+	if err != nil {
+		return "", err
+	} else {
+		//生成随机码，发送邮箱，并让code验证码存储在redis里
+		var code string
+		code = generateRandomString()
+		errr := s.redis.StoreUserCode(r.UserID, code)
+		if errr != nil {
+			return "", errr
+		}
+
+		var u *domain.User
+		u, err = s.repo.ById(r.UserID)
+		if err != nil {
+			return "", err
+		}
+		err = sendEmail(*u, code)
+		if err != nil {
+			return "", err
+		}
+		return code, nil
+	}
+}
+
+func sendEmail(u domain.User, code string) *errs.AppError {
+
+	// 1. 读取并解析外部 HTML 模板文件
+	tmpl, err := template.ParseFiles("templates/email_template.html")
+	if err != nil {
+		log.Fatalf("Error parsing template: %v", err)
+		return errs.NewUnexpectedError("Error parsing template" + err.Error())
+	}
+
+	// 2. 渲染模板到缓冲区
+	var body bytes.Buffer
+	err = tmpl.Execute(&body, dto.EmailData{
+		Name: u.Name,
+		Code: code,
+		Time: time.Now().Format("2006-01-02 15:04:05"),
+	})
+	if err != nil {
+		log.Fatalf("Error executing template: %v", err)
+		return errs.NewUnexpectedError("Error executing template" + err.Error())
+	}
+
+	//3. 使用gmail发送邮件
+	m := gomail.NewMessage()
+	m.SetHeader("From", "no-reply@esaps.net") // 发件人
+	m.SetHeader("To", u.Email.String)         // 收件人
+	m.SetHeader("Subject", "Test Email")      // 主题
+	m.SetBody("text/html", body.String())     //正文
+
+	// SMTP 服务器配置
+	d := gomail.NewDialer("smtp.esaps.net", 587, "no-reply@esaps.net", utils.Email_Password)
+	errr := d.DialAndSend(m)
+	if errr != nil {
+		return errs.NewUnexpectedError("Error while sending email" + errr.Error())
+	}
+
+	// 发送邮件
+	return nil
+}
+
+func generateRandomString() string {
+	const charset = utils.Charset
+	const length = 6
+	rand.Seed(time.Now().UnixNano()) // 使用当前时间的纳秒数作为种子
+
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(result)
 }
 
 func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError) {
@@ -93,13 +186,18 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 		user.Role.String = r.Role
 	}
 	if r.Impl == "Password" {
-		if r.OldPassword == "" {
-			return nil, errs.NewUnexpectedError("invalid oldPassword")
-		}
+		//if r.OldPassword == "" {
+		//	return nil, errs.NewUnexpectedError("invalid oldPassword")
+		//}
+		//
+		//_, ePrr := s.utilsRepo.CheckPassword(id, r.OldPassword)
+		//if ePrr != nil {
+		//	return nil, ePrr
+		//}
 
-		_, ePrr := s.utilsRepo.CheckPassword(id, r.OldPassword)
-		if ePrr != nil {
-			return nil, ePrr
+		err := s.redis.IsCodeExists(id, r.Code)
+		if err != nil {
+			return nil, err
 		}
 
 		if r.NewPassword == "" {
@@ -137,9 +235,10 @@ func checkUserId(id string) *errs.AppError {
 	return nil
 }
 
-func NewUserService(repo domain.UserRepository, utilsRepo domain.UtilsRepository) DefaultUserService {
+func NewUserService(repo domain.UserRepository, utilsRepo domain.UtilsRepository, redis domain.RedisRepository) DefaultUserService {
 	return DefaultUserService{
 		repo:      repo,
 		utilsRepo: utilsRepo,
+		redis:     redis,
 	}
 }

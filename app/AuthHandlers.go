@@ -2,10 +2,13 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Zzhihon/sso/dto"
 	"github.com/Zzhihon/sso/errs"
 	"github.com/Zzhihon/sso/service"
+	"github.com/Zzhihon/sso/utils"
 	"net/http"
+	"time"
 )
 
 type AuthHandlers struct {
@@ -20,7 +23,30 @@ func (h AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		tokens, err := h.service.Login(loginRequest)
 		if err != nil {
+			// 设置 access_token 到 cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     "access_token",
+				Value:    tokens.AccessToken,
+				HttpOnly: true,  // 安全标记，防止通过 JavaScript 访问
+				Secure:   false, // 在开发时可以设置为 false，生产环境使用 true
+				Path:     "/",
+				Expires:  time.Now().Add(utils.ACCESS_TOKEN_DURATION), // 设置有效期
+			})
+
+			// 设置 refresh_token 到 cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     "refresh_token",
+				Value:    tokens.RefreshToken,
+				HttpOnly: true,
+				Secure:   false,
+				Path:     "/",
+				Expires:  time.Now().Add(utils.REFRESH_TOKEN_DURATION), // refresh token 可以设置较长有效期
+			})
+
+			// 发送响应
+			fmt.Fprintf(w, "Tokens set successfully!")
 			writeResponse(w, http.StatusUnauthorized, err.AsMessage())
+
 		} else {
 			writeResponse(w, http.StatusOK, tokens)
 		}

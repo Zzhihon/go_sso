@@ -18,7 +18,7 @@ type AuthService interface {
 type DefaultAuthService struct {
 	repo      domain.AuthRepository
 	utilsRepo domain.UtilsRepository
-	redis     domain.AuthRepositoryRedis
+	redis     domain.RedisRepository
 }
 
 func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError) {
@@ -104,7 +104,7 @@ func jwtTokenFromString(tokenstring string) (*jwt.Token, *errs.AppError) {
 	return token, nil
 }
 
-func NewAuthService(repo domain.AuthRepository, utilsRepo domain.UtilsRepository, redis domain.AuthRepositoryRedis) DefaultAuthService {
+func NewAuthService(repo domain.AuthRepository, utilsRepo domain.UtilsRepository, redis domain.RedisRepository) DefaultAuthService {
 	return DefaultAuthService{
 		repo:      repo,
 		utilsRepo: utilsRepo,

@@ -23,15 +23,16 @@ func Start() {
 
 	//初始化一个服务，同时要给这个服务注入依赖(Repo)
 	//handler通过Service接口实现业务逻辑，同时依赖Repo来实现与数据库的操作
-	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()))}
-	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()), domain.NewAuthRepositoryRedisImpl(initRedis(), context.Background()))}
+	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()), domain.NewRedisRepositoryImpl(initRedis(), context.Background()))}
+	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()), domain.NewRedisRepositoryImpl(initRedis(), context.Background()))}
 
 	router.HandleFunc("/login", ah.Login).Methods(http.MethodPost)
 	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)
 	router.HandleFunc("/refresh", ah.Refresh).Methods(http.MethodPost)
 
+	router.HandleFunc("/Code", ch.IsEmailValid).Methods(http.MethodPost)
 	router.HandleFunc("/Update/{impl:[a-zA-Z0-9]+}", ch.update).Methods(http.MethodPost)
-	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods("GET")
+	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods(http.MethodGet)
 	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
 	//router.HandleFunc("/getUser/{username:[0-9]+}", getUser)
 	log.Fatal(http.ListenAndServe(":8080", router))

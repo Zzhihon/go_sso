@@ -15,6 +15,7 @@ type UserRepositoryDb struct {
 
 func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
 	var err error
+
 	users := make([]User, 0)
 
 	if status == "" {
@@ -50,6 +51,21 @@ func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
 	}
 
 	return &u, nil
+}
+
+func (d UserRepositoryDb) IsEmailValid(username string, email string) *errs.AppError {
+	Usersql := "Select username from account_customuser where username = ? and email = ?"
+	var userID string
+	err := d.client.Get(&userID, Usersql, username, email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errs.NewNotFoundError("user not found or email not match")
+		} else {
+			return errs.NewBadGatewayError(err.Error())
+		}
+	}
+
+	return nil
 }
 
 func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {

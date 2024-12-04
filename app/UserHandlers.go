@@ -60,6 +60,22 @@ func (ch *UserHandlers) update(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ch *UserHandlers) IsEmailValid(w http.ResponseWriter, r *http.Request) {
+	var request dto.CheckEmailRequest
+
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		writeResponse(w, http.StatusBadRequest, err.Error())
+	} else {
+		token, err := ch.service.IsEmailValid(request)
+		if err != nil {
+			writeResponse(w, err.Code, err.AsMessage())
+		} else {
+			writeResponse(w, http.StatusOK, token)
+		}
+	}
+}
+
 func writeResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)

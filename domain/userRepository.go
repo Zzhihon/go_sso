@@ -24,6 +24,7 @@ type UserRepository interface {
 	FindAll(status string) ([]User, *errs.AppError)
 	ById(string) (*User, *errs.AppError)
 	Update(User, string) (*User, *errs.AppError)
+	IsEmailValid(string, email string) *errs.AppError
 }
 
 func (u User) StatusAsText() string {

@@ -10,4 +10,16 @@ type NewUpdateRequest struct {
 	Role        string `json:"role"`
 	Status      string `json:"status"`
 	Impl        string `json:"impl"`
+	Code        string `json:"code"`
+}
+
+type CheckEmailRequest struct {
+	UserID string `json:"userID"`
+	Email  string `json:"email"`
+}
+
+type EmailData struct {
+	Name string `json:"name"`
+	Code string `json:"code"`
+	Time string `json:"time"`
 }
