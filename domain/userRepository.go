@@ -21,7 +21,7 @@ type User struct {
 }
 
 type UserRepository interface {
-	FindAll(status string) ([]User, *errs.AppError)
+	FindAll(status string, page int, pageSize int) ([]User, *errs.AppError)
 	ById(string) (*User, *errs.AppError)
 	Update(User, string) (*User, *errs.AppError)
 	IsEmailValid(string, email string) *errs.AppError

@@ -13,19 +13,19 @@ type UserRepositoryDb struct {
 	client *sqlx.DB
 }
 
-func (d UserRepositoryDb) FindAll(status string) ([]User, *errs.AppError) {
+func (d UserRepositoryDb) FindAll(status string, pages, pagesize int) ([]User, *errs.AppError) {
 	var err error
-
+	offset := (pages - 1) * pagesize // 计算偏移量
 	users := make([]User, 0)
 
 	if status == "" {
-		findAllSql := "select username, name from account_customuser"
-		err = d.client.Select(&users, findAllSql)
+		findAllSql := "select username, name from account_customuser LIMIT ? OFFSET ?"
+		err = d.client.Select(&users, findAllSql, pagesize, offset)
 
 	} else {
 		//筛选出status为某一特定状态的所有用户
-		findAllSql := "select username, name from account_customuser where status = ?"
-		err = d.client.Select(&users, findAllSql, status)
+		findAllSql := "select username, name from account_customuser where status = ? LIMIT ? OFFSET ?"
+		err = d.client.Select(&users, findAllSql, status, pagesize, offset)
 	}
 	if err != nil {
 		logger.Error("Error while querying user table " + err.Error())

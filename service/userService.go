@@ -15,7 +15,7 @@ import (
 )
 
 type UserService interface {
-	GetAllUsers(status string) ([]dto.UserResponse, *errs.AppError)
+	GetAllUsers(r dto.GetAllUsers) ([]dto.UserResponse, *errs.AppError)
 	GetUser(id string) (*dto.UserResponse, *errs.AppError)
 	Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError)
 	IsEmailValid(r dto.CheckEmailRequest) (string, *errs.AppError)
@@ -27,7 +27,10 @@ type DefaultUserService struct {
 	redis     domain.RedisRepository
 }
 
-func (s DefaultUserService) GetAllUsers(status string) ([]dto.UserResponse, *errs.AppError) {
+func (s DefaultUserService) GetAllUsers(r dto.GetAllUsers) ([]dto.UserResponse, *errs.AppError) {
+	var status string
+	status = r.Status
+
 	if status == "active" {
 		status = "1"
 	} else if status == "inactive" {
@@ -36,7 +39,7 @@ func (s DefaultUserService) GetAllUsers(status string) ([]dto.UserResponse, *err
 		status = ""
 	}
 
-	user, err := s.repo.FindAll(status)
+	user, err := s.repo.FindAll(status, r.Page, r.PageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +73,7 @@ func (s DefaultUserService) IsEmailValid(r dto.CheckEmailRequest) (string, *errs
 	if err != nil {
 		return "", err
 	}
-	
+
 	err = s.repo.IsEmailValid(r.UserID, r.Email)
 	if err != nil {
 		return "", err

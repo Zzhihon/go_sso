@@ -2,11 +2,12 @@ package app
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"github.com/Zzhihon/sso/dto"
 	"github.com/Zzhihon/sso/service"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type UserHandlers struct {
@@ -14,17 +15,34 @@ type UserHandlers struct {
 }
 
 func (ch *UserHandlers) getALLUsers(w http.ResponseWriter, r *http.Request) {
-
+	// 获取分页参数
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
 	status := r.URL.Query().Get("status")
-	users, _ := ch.service.GetAllUsers(status)
 
-	if r.Header.Get("Content-Type") == "application/xml" {
-		w.Header().Add("Content-Type", "application/xml")
-		xml.NewEncoder(w).Encode(users)
-	} else {
-		w.Header().Add("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(users)
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 0 {
+		page = 1
 	}
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 0 {
+		pageSize = 50
+	}
+
+	request := dto.GetAllUsers{
+		Status:   status,
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	users, errr := ch.service.GetAllUsers(request)
+	if errr != nil {
+		log.Println(errr)
+		writeResponse(w, errr.Code, errr.AsMessage())
+	} else {
+		writeResponse(w, http.StatusOK, users)
+	}
+
 }
 
 func (ch *UserHandlers) getUser(w http.ResponseWriter, r *http.Request) {

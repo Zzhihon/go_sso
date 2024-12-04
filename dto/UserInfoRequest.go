@@ -23,3 +23,9 @@ type EmailData struct {
 	Code string `json:"code"`
 	Time string `json:"time"`
 }
+
+type GetAllUsers struct {
+	Status   string `json:"status"`
+	Page     int    `json:"page"`
+	PageSize int    `json:"Size"`
+}
