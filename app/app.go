@@ -28,14 +28,14 @@ func Start() {
 	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(client), domain.NewUtilsRepositoryDb(client), domain.NewRedisRepositoryImpl(initRedis(), context.Background()))}
 
 	router.HandleFunc("/login", ah.Login).Methods(http.MethodPost)
-	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)
-	router.HandleFunc("/refresh", ah.Refresh).Methods(http.MethodPost)
+	router.HandleFunc("/token_verify", ah.Verify).Methods(http.MethodPost)
+	router.HandleFunc("/token_refresh", ah.Refresh).Methods(http.MethodPost)
 
 	router.HandleFunc("/heartbeat", ch.HeartBeat).Methods(http.MethodPost)
-	router.HandleFunc("/Code", ch.IsEmailValid).Methods(http.MethodPost)
-	router.HandleFunc("/Update/{impl:[a-zA-Z0-9]+}", ch.update).Methods(http.MethodPost)
+	router.HandleFunc("/code", ch.IsEmailValid).Methods(http.MethodPost)
+	router.HandleFunc("/modify/{impl:[a-zA-Z0-9]+}", ch.update).Methods(http.MethodPost)
 	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods(http.MethodGet)
-	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
+	router.HandleFunc("/getAllUsersInfo", ch.getALLUsers).Methods(http.MethodGet)
 	//router.HandleFunc("/getUser/{username:[0-9]+}", getUser)
 	SERVER_PORT := os.Getenv("SERVER_PORT")
 	log.Fatal(http.ListenAndServe(":"+SERVER_PORT, router))

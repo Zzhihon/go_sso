@@ -23,7 +23,6 @@ func (h AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	} else {
 		tokens, err := h.service.Login(loginRequest)
 		log.Println("success login service")
-		log.Println(tokens)
 		if err != nil {
 			writeResponse(w, http.StatusUnauthorized, err.AsMessage())
 		} else {
