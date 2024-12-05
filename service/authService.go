@@ -72,25 +72,39 @@ func (s DefaultAuthService) Verify(token string) (bool, *errs.AppError) {
 }
 
 func (s DefaultAuthService) Refresh(request dto.RefreshRequest) (*dto.RefreshTokenResponse, *errs.AppError) {
-	if vErr := request.IsAccessTokenValid(); vErr != nil {
-		if vErr.Errors == jwt.ValidationErrorExpired {
-			var appErr *errs.AppError
-			if appErr = s.redis.RefreshTokenExists(request.RefrestToken); appErr != nil {
-				return nil, appErr
-			}
-
-			var accessToken string
-			var err *errs.AppError
-			if accessToken, err = domain.NewAccessTokenFromRefreshToken(request.RefrestToken); err != nil {
-				return nil, err
-			}
-			return &dto.RefreshTokenResponse{
-				AccessToken: accessToken,
-			}, nil
-		}
-		return nil, errs.NewUnAuthorizedError(vErr.Error())
+	//只有当access_token过期才可以refresh
+	//if vErr := request.IsAccessTokenValid(); vErr != nil {
+	//	if vErr.Errors == jwt.ValidationErrorExpired {
+	//		var appErr *errs.AppError
+	//		if appErr = s.redis.RefreshTokenExists(request.RefrestToken); appErr != nil {
+	//			return nil, appErr
+	//		}
+	//
+	//		var accessToken string
+	//		var err *errs.AppError
+	//		if accessToken, err = domain.NewAccessTokenFromRefreshToken(request.RefrestToken); err != nil {
+	//			return nil, err
+	//		}
+	//		return &dto.RefreshTokenResponse{
+	//			AccessToken: accessToken,
+	//		}, nil
+	//	}
+	//	return nil, errs.NewUnAuthorizedError(vErr.Error())
+	//}
+	//return nil, errs.NewUnexpectedError("can not generate a new access token until the current one is expired")
+	if appErr := s.redis.RefreshTokenExists(request.RefrestToken); appErr != nil {
+		return nil, appErr
 	}
-	return nil, errs.NewUnexpectedError("can not generate a new access token until the current one is expired")
+
+	var accessToken string
+	var err *errs.AppError
+	if accessToken, err = domain.NewAccessTokenFromRefreshToken(request.RefrestToken); err != nil {
+		return nil, err
+	}
+	return &dto.RefreshTokenResponse{
+		AccessToken: accessToken,
+	}, nil
+
 }
 
 func jwtTokenFromString(tokenstring string) (*jwt.Token, *errs.AppError) {

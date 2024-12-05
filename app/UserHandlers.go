@@ -94,6 +94,23 @@ func (ch *UserHandlers) IsEmailValid(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ch *UserHandlers) HeartBeat(w http.ResponseWriter, r *http.Request) {
+	var request dto.OnlineUsers
+
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		writeResponse(w, http.StatusBadRequest, err.Error())
+	} else {
+		var res *dto.UserStateResponse
+		res, err := ch.service.UserOnline(request.UserID)
+		if err != nil {
+			writeResponse(w, err.Code, err.AsMessage())
+		} else {
+			writeResponse(w, http.StatusOK, res)
+		}
+	}
+}
+
 func writeResponse(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)

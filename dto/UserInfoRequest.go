@@ -29,3 +29,7 @@ type GetAllUsers struct {
 	Page     int    `json:"page"`
 	PageSize int    `json:"Size"`
 }
+
+type OnlineUsers struct {
+	UserID string `json:"userID"`
+}

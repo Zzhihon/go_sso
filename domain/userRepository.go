@@ -16,7 +16,6 @@ type User struct {
 	Email       sql.NullString `db:"email"`
 	PhoneNumber sql.NullString `db:"phone_number"`
 	Status      sql.NullString `db:"status"`
-	IsActive    bool           `db:"is_active"`
 	Role        sql.NullString `db:"role"`
 }
 

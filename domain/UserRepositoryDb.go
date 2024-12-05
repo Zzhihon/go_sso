@@ -24,7 +24,7 @@ func (d UserRepositoryDb) FindAll(status string, pages, pagesize int) ([]User, *
 
 	} else {
 		//筛选出status为某一特定状态的所有用户
-		findAllSql := "select username, name from account_customuser where status = ? LIMIT ? OFFSET ?"
+		findAllSql := "select username, name from account_customuser where is_active = ? LIMIT ? OFFSET ?"
 		err = d.client.Select(&users, findAllSql, status, pagesize, offset)
 	}
 	if err != nil {

@@ -9,3 +9,10 @@ type UserResponse struct {
 	PhoneNumber string `json:"phoneNumber"`
 	Status      string `json:"status"`
 }
+
+type UserStateResponse struct {
+	Status      string `json:"status"`
+	Message     string `json:"message"`
+	OnlineUsers int    `json:"onlineUsers"`
+	TimeStamp   int64  `json:"timeStamp"`
+}

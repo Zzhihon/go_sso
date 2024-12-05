@@ -19,6 +19,7 @@ type UserService interface {
 	GetUser(id string) (*dto.UserResponse, *errs.AppError)
 	Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError)
 	IsEmailValid(r dto.CheckEmailRequest) (string, *errs.AppError)
+	UserOnline(userID string) (*dto.UserStateResponse, *errs.AppError)
 }
 
 type DefaultUserService struct {
@@ -148,6 +149,28 @@ func generateRandomString() string {
 		result[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(result)
+}
+
+func (s DefaultUserService) UserOnline(id string) (*dto.UserStateResponse, *errs.AppError) {
+	err := s.redis.StoreUserOnline(id)
+	if err != nil {
+		return nil, err
+	}
+
+	UsersCount, err := s.redis.GetOnlineUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	res := &dto.UserStateResponse{
+		Status:      "online",
+		Message:     "服务器正常运行",
+		OnlineUsers: UsersCount,
+		TimeStamp:   0,
+	}
+
+	return res, nil
+
 }
 
 func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *errs.AppError) {
