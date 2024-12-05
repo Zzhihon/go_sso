@@ -36,7 +36,9 @@ func Start() {
 	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods(http.MethodGet)
 	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
 	//router.HandleFunc("/getUser/{username:[0-9]+}", getUser)
-	log.Fatal(http.ListenAndServe(":8080", router))
+	SERVER_PORT := os.Getenv("DB_USER")
+
+	log.Fatal(http.ListenAndServe(SERVER_PORT, router))
 }
 
 func getDBClient() *sqlx.DB {
