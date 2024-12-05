@@ -20,11 +20,11 @@ import (
 func Start() {
 	sanityCheck()
 	router := mux.NewRouter()
-
+	client := getDBClient()
 	//初始化一个服务，同时要给这个服务注入依赖(Repo)
 	//handler通过Service接口实现业务逻辑，同时依赖Repo来实现与数据库的操作
-	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()), domain.NewRedisRepositoryImpl(initRedis(), context.Background()))}
-	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(getDBClient()), domain.NewUtilsRepositoryDb(getDBClient()), domain.NewRedisRepositoryImpl(initRedis(), context.Background()))}
+	ch := UserHandlers{service: service.NewUserService(domain.NewUserRepositoryDb(client), domain.NewUtilsRepositoryDb(client), domain.NewRedisRepositoryImpl(initRedis(), context.Background()))}
+	ah := AuthHandlers{service: service.NewAuthService(domain.NewAuthRepositoryDb(client), domain.NewUtilsRepositoryDb(client), domain.NewRedisRepositoryImpl(initRedis(), context.Background()))}
 
 	router.HandleFunc("/login", ah.Login).Methods(http.MethodPost)
 	router.HandleFunc("/verify", ah.Verify).Methods(http.MethodPost)
@@ -36,9 +36,9 @@ func Start() {
 	router.HandleFunc("/GetUser/{user_id:[0-9]+}", ch.getUser).Methods(http.MethodGet)
 	router.HandleFunc("/Users", ch.getALLUsers).Methods(http.MethodGet)
 	//router.HandleFunc("/getUser/{username:[0-9]+}", getUser)
-	SERVER_PORT := os.Getenv("DB_USER")
+	SERVER_PORT := os.Getenv("SERVER_PORT")
+	log.Fatal(http.ListenAndServe(":"+SERVER_PORT, router))
 
-	log.Fatal(http.ListenAndServe(SERVER_PORT, router))
 }
 
 func getDBClient() *sqlx.DB {
@@ -48,20 +48,19 @@ func getDBClient() *sqlx.DB {
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
 
-	//postgresql数据库连接信息
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbAddr, dbPort, dbUser, dbPasswd, dbName)
-	client, err := sqlx.Connect("postgres", dsn) // 使用 PostgreSQL 驱动
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer client.Close()
-
-	//dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
-	//client, err := sqlx.Open("mysql", dataSource)
+	////postgresql数据库连接信息
+	//dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbAddr, dbPort, dbUser, dbPasswd, dbName)
+	//client, err := sqlx.Connect("postgres", dsn) // 使用 PostgreSQL 驱动
 	//if err != nil {
-	//	panic(err)
+	//	log.Fatal(err)
 	//}
-	// See "Important settings" section.
+
+	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
+	client, err := sqlx.Open("mysql", dataSource)
+	if err != nil {
+		panic(err)
+	}
+
 	client.SetConnMaxLifetime(time.Minute * 3)
 	client.SetMaxOpenConns(10)
 	client.SetMaxIdleConns(10)
