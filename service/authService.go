@@ -36,6 +36,7 @@ func (s DefaultAuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *er
 	}
 
 	claims := login.ClaimsForAccessToken()
+
 	authToken := domain.NewAuthToken(claims)
 	var accessToken, refreshToken string
 	if accessToken, err = authToken.NewAccessToken(); err != nil {

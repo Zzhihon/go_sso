@@ -213,11 +213,10 @@ func (s DefaultUserService) Update(r dto.NewUpdateRequest) (*dto.UserResponse, *
 		//	return nil, ePrr
 		//}
 
-		err := s.redis.IsCodeExists(id, r.Code)
-		if err != nil {
-			return nil, err
-		}
-
+		//err := s.redis.IsCodeExists(id, r.Code)
+		//if err != nil {
+		//	return nil, err
+		//}
 		if r.NewPassword == "" {
 			return nil, errs.NewUnexpectedError("invalid newPassword")
 		}

@@ -23,7 +23,7 @@ func (d UserRepositoryDb) FindAll(status string, pages, pagesize int) ([]User, *
 		flag = false
 	}
 	//筛选出status为某一特定状态的所有用户
-	findAllSql := "select username, name, email, phone_number, grade, major_class, is_active, is_superuser, is_staff from account_customuser where is_active = ? LIMIT ? OFFSET ?"
+	findAllSql := "select username, name, email, phone_number, grade, major_class, is_active, is_superuser, is_staff from account_customuser where is_active = $1 LIMIT $2 OFFSET $3"
 	err = d.client.Select(&users, findAllSql, flag, pagesize, offset)
 
 	if err != nil {
@@ -36,7 +36,7 @@ func (d UserRepositoryDb) FindAll(status string, pages, pagesize int) ([]User, *
 }
 
 func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
-	Usersql := "select username, name, email, phone_number, grade, major_class, is_active, is_superuser, is_staff from account_customuser where username = ?"
+	Usersql := "select username, name, email, phone_number, grade, major_class, is_active, is_superuser, is_staff from account_customuser where username = $1"
 
 	var u User
 	err := d.client.Get(&u, Usersql, id)
@@ -53,7 +53,7 @@ func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
 }
 
 func (d UserRepositoryDb) IsEmailValid(username string, email string) *errs.AppError {
-	Usersql := "Select username from account_customuser where username = ? and email = ?"
+	Usersql := "Select username from account_customuser where username = $1 and email = $2"
 	var userID string
 	err := d.client.Get(&userID, Usersql, username, email)
 	if err != nil {
@@ -72,23 +72,23 @@ func (d UserRepositoryDb) Update(u User, imple string) (*User, *errs.AppError) {
 	var s string
 	//用imple识别用户要修改的字段
 	if imple == "Name" {
-		query = "UPDATE account_customuser SET name = ? WHERE username = ?;"
+		query = "UPDATE account_customuser SET name = $1 WHERE username = $2"
 		s = u.Name
 	}
 	if imple == "Email" {
-		query = "UPDATE account_customuser SET email = ? WHERE username = ?;"
+		query = "UPDATE account_customuser SET email = $1 WHERE username = $2"
 		s = u.Email.String
 	}
 	if imple == "PhoneNumber" {
-		query = "UPDATE account_customuser SET phone_number = ? WHERE username = ?;"
+		query = "UPDATE account_customuser SET phone_number = $1 WHERE username = $2"
 		s = u.PhoneNumber.String
 	}
 	if imple == "Password" {
-		query = "UPDATE account_customuser SET password = ? WHERE username = ?;"
+		query = "UPDATE account_customuser SET password = $1 WHERE username = $2"
 		s = u.Password
 	}
 	if imple == "Role" {
-		query = "UPDATE account_customuser SET role = ? WHERE username = ?;"
+		query = "UPDATE account_customuser SET role = $1 WHERE username = $2"
 		s = u.Role.String
 	}
 

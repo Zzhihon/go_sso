@@ -2,11 +2,11 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Zzhihon/sso/dto"
 	"github.com/Zzhihon/sso/errs"
 	"github.com/Zzhihon/sso/service"
 	"github.com/Zzhihon/sso/utils"
+	"log"
 	"net/http"
 	"time"
 )
@@ -22,7 +22,11 @@ func (h AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, http.StatusBadRequest, errs.NewBadRequestError(err.Error()))
 	} else {
 		tokens, err := h.service.Login(loginRequest)
+		log.Println("success login service")
+		log.Println(tokens)
 		if err != nil {
+			writeResponse(w, http.StatusUnauthorized, err.AsMessage())
+		} else {
 			// 设置 access_token 到 cookie
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
@@ -44,10 +48,6 @@ func (h AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 			})
 
 			// 发送响应
-			fmt.Fprintf(w, "Tokens set successfully!")
-			writeResponse(w, http.StatusUnauthorized, err.AsMessage())
-
-		} else {
 			writeResponse(w, http.StatusOK, tokens)
 		}
 	}
