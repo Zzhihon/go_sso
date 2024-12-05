@@ -2,8 +2,11 @@ package domain
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/Zzhihon/sso/errs"
 	"github.com/go-redis/redis/v8"
+	"log"
 	"time"
 )
 
@@ -97,15 +100,37 @@ func (a RedisRepositoryImpl) GetOnlineUsers() (int, *errs.AppError) {
 }
 
 func (a RedisRepositoryImpl) IsCodeExists(userID string, code string) *errs.AppError {
-	// 查询 refresh_token
-	code, err := a.rdb.Get(a.ctx, userID).Result()
-	if err == redis.Nil {
-		return errs.NewNotFoundError("Token does not exist " + err.Error())
-	}
+	storedToken, err := a.getToken(userID)
 	if err != nil {
-		return errs.NewUnexpectedError("Error while checking token " + err.Error())
+		log.Fatalf("Error checking token: %v", err)
 	}
-	return nil
+
+	// 验证 token 是否匹配
+	if validateToken(code, storedToken) {
+		fmt.Println("Token is valid and matches.")
+		return nil
+	} else {
+		fmt.Println("Token is invalid or does not match.")
+		return errs.NewUnexpectedError("Token is invalid or does not match.")
+	}
+}
+
+func (a RedisRepositoryImpl) getToken(id string) (string, *errs.AppError) {
+	// 使用 GET 命令获取 id 对应的 token
+	code, err := a.rdb.Get(a.ctx, id).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			// 如果键不存在，返回空字符串
+			return "", nil
+		}
+		return "", errs.NewUnexpectedError("Error while fetching token " + err.Error())
+	}
+	return code, nil
+}
+
+func validateToken(providedToken, storedToken string) bool {
+	// 比较提供的 token 和存储的 token 是否一致
+	return providedToken == storedToken
 }
 
 func NewRedisRepositoryImpl(rdb *redis.Client, ctx context.Context) RedisRepository {
