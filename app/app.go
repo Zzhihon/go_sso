@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -48,18 +49,18 @@ func getDBClient() *sqlx.DB {
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
 
-	////postgresql数据库连接信息
-	//dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbAddr, dbPort, dbUser, dbPasswd, dbName)
-	//client, err := sqlx.Connect("postgres", dsn) // 使用 PostgreSQL 驱动
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
-	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
-	client, err := sqlx.Open("mysql", dataSource)
+	//postgresql数据库连接信息
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbAddr, dbPort, dbUser, dbPasswd, dbName)
+	client, err := sqlx.Connect("postgres", dsn) // 使用 PostgreSQL 驱动
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+
+	//dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
+	//client, err := sqlx.Open("mysql", dataSource)
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	client.SetConnMaxLifetime(time.Minute * 3)
 	client.SetMaxOpenConns(10)
@@ -69,10 +70,20 @@ func getDBClient() *sqlx.DB {
 
 func initRedis() *redis.Client {
 	var rdb *redis.Client
+
+	rdPort := os.Getenv("REDIS_PORT")
+	rdHost := os.Getenv("REDIS_HOST")
+	rdPwd := os.Getenv("REDIS_PWD")
+	rdDBstr := os.Getenv("REDIS_DB")
+
+	rdDB, err := strconv.Atoi(rdDBstr)
+	if err != nil {
+		rdDB = 3
+	}
 	rdb = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+		Addr:     rdHost + ":" + rdPort,
+		Password: rdPwd,
+		DB:       rdDB,
 	})
 	return rdb
 }
