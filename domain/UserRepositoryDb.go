@@ -18,15 +18,14 @@ func (d UserRepositoryDb) FindAll(status string, pages, pagesize int) ([]User, *
 	offset := (pages - 1) * pagesize // 计算偏移量
 	users := make([]User, 0)
 
-	if status == "" {
-		findAllSql := "select username, name from account_customuser LIMIT ? OFFSET ?"
-		err = d.client.Select(&users, findAllSql, pagesize, offset)
-
-	} else {
-		//筛选出status为某一特定状态的所有用户
-		findAllSql := "select username, name from account_customuser where is_active = ? LIMIT ? OFFSET ?"
-		err = d.client.Select(&users, findAllSql, status, pagesize, offset)
+	var flag = true
+	if status == "inactive" {
+		flag = false
 	}
+	//筛选出status为某一特定状态的所有用户
+	findAllSql := "select username, name, email, phone_number, grade, major_class, is_active, is_superuser, is_staff from account_customuser where is_active = ? LIMIT ? OFFSET ?"
+	err = d.client.Select(&users, findAllSql, flag, pagesize, offset)
+
 	if err != nil {
 		logger.Error("Error while querying user table " + err.Error())
 		return nil, errs.NewNotFoundError(err.Error())
@@ -37,7 +36,7 @@ func (d UserRepositoryDb) FindAll(status string, pages, pagesize int) ([]User, *
 }
 
 func (d UserRepositoryDb) ById(id string) (*User, *errs.AppError) {
-	Usersql := "select username, name, email, phone_number, grade, major_class, status from account_customuser where username = ?"
+	Usersql := "select username, name, email, phone_number, grade, major_class, is_active, is_superuser, is_staff from account_customuser where username = ?"
 
 	var u User
 	err := d.client.Get(&u, Usersql, id)

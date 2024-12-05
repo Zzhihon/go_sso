@@ -32,14 +32,6 @@ func (s DefaultUserService) GetAllUsers(r dto.GetAllUsers) ([]dto.UserResponse, 
 	var status string
 	status = r.Status
 
-	if status == "active" {
-		status = "1"
-	} else if status == "inactive" {
-		status = "0"
-	} else {
-		status = ""
-	}
-
 	user, err := s.repo.FindAll(status, r.Page, r.PageSize)
 	if err != nil {
 		return nil, err

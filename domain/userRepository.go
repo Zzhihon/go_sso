@@ -15,8 +15,11 @@ type User struct {
 	MajorClass  sql.NullString `db:"major_class"`
 	Email       sql.NullString `db:"email"`
 	PhoneNumber sql.NullString `db:"phone_number"`
-	Status      sql.NullString `db:"status"`
+	//Status      sql.NullString `db:"status"`
 	Role        sql.NullString `db:"role"`
+	IsActive    bool           `db:"is_active"`
+	IsSuperuser bool           `db:"is_superuser"`
+	IsStaff     bool           `db:"is_staff"`
 }
 
 type UserRepository interface {
@@ -26,13 +29,13 @@ type UserRepository interface {
 	IsEmailValid(string, email string) *errs.AppError
 }
 
-func (u User) StatusAsText() string {
-	statusAsText := "active"
-	if u.Status.String == "0" {
-		statusAsText = "inactive"
-	}
-	return statusAsText
-}
+//func (u User) StatusAsText() string {
+//	statusAsText := "active"
+//	if u.Status.String == "0" {
+//		statusAsText = "inactive"
+//	}
+//	return statusAsText
+//}
 
 func (u User) ToDto() dto.UserResponse {
 	return dto.UserResponse{
@@ -42,6 +45,9 @@ func (u User) ToDto() dto.UserResponse {
 		MajorClass:  u.MajorClass.String,
 		Email:       u.Email.String,
 		PhoneNumber: u.PhoneNumber.String,
-		Status:      u.StatusAsText(),
+		IsActive:    u.IsActive,
+		IsSuperuser: u.IsSuperuser,
+		IsStaff:     u.IsStaff,
+		//Status:      u.StatusAsText(),
 	}
 }

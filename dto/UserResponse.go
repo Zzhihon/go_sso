@@ -7,7 +7,10 @@ type UserResponse struct {
 	MajorClass  string `json:"majorClass"`
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phoneNumber"`
-	Status      string `json:"status"`
+	IsActive    bool   `json:"is_active"`
+	IsSuperuser bool   `json:"is_superuser"`
+	IsStaff     bool   `json:"is_staff"`
+	//Status      string `json:"status"`
 }
 
 type UserStateResponse struct {
