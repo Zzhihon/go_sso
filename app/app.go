@@ -48,19 +48,19 @@ func getDBClient() *sqlx.DB {
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
 
-	// postgresql数据库连接信息
-	//dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",dbAddr, dbPort, dbUser, dbPasswd, dbName)
-	//db, err := sqlx.Connect("postgres", dsn) // 使用 PostgreSQL 驱动
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//defer db.Close()
-
-	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
-	client, err := sqlx.Open("mysql", dataSource)
+	//postgresql数据库连接信息
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbAddr, dbPort, dbUser, dbPasswd, dbName)
+	client, err := sqlx.Connect("postgres", dsn) // 使用 PostgreSQL 驱动
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
+	defer client.Close()
+
+	//dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPasswd, dbAddr, dbPort, dbName)
+	//client, err := sqlx.Open("mysql", dataSource)
+	//if err != nil {
+	//	panic(err)
+	//}
 	// See "Important settings" section.
 	client.SetConnMaxLifetime(time.Minute * 3)
 	client.SetMaxOpenConns(10)
